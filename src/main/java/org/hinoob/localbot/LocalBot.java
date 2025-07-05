@@ -1,36 +1,25 @@
 package org.hinoob.localbot;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import io.github.ollama4j.OllamaAPI;
-import io.github.ollama4j.models.chat.OllamaChatRequest;
-import io.github.ollama4j.models.chat.OllamaChatResult;
 import lombok.Getter;
 import lombok.Setter;
-import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
-import net.dv8tion.jda.api.entities.Activity;
-import net.dv8tion.jda.api.entities.Guild;
-import net.dv8tion.jda.api.entities.Member;
-import net.dv8tion.jda.api.entities.MessageEmbed;
-import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import net.dv8tion.jda.api.requests.GatewayIntent;
 import org.hinoob.localbot.command.CommandHandler;
 import org.hinoob.localbot.command.impl.*;
 import org.hinoob.localbot.datastore.DatastoreHandler;
 import org.hinoob.localbot.listener.MessageListener;
+import org.hinoob.localbot.tickable.GeoguessGame;
 import org.hinoob.localbot.tickable.IMDBRemind;
 import org.hinoob.localbot.tickable.StealABrainrot;
+import org.hinoob.localbot.tickable.Tickable;
 import org.hinoob.localbot.util.FileUtil;
-import org.hinoob.localbot.util.MessageUtil;
 
-import java.awt.*;
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.Arrays;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 @Getter
@@ -44,8 +33,9 @@ public class LocalBot {
     private DatastoreHandler datastoreHandler = new DatastoreHandler();
     private CommandHandler commandHandler = new CommandHandler();
 
-    private StealABrainrot stealABrainrot;
-    private IMDBRemind imdbRemind;
+    private final List<Tickable> tickables = new ArrayList<>();
+
+    private GeoguessGame geoguessGame;
 
     public void start() {
         if(new File("secret.json").exists()) {
@@ -64,8 +54,7 @@ public class LocalBot {
                 .addEventListeners(new MessageListener())
                 .build();
 
-        stealABrainrot = new StealABrainrot(jda);
-        imdbRemind = new IMDBRemind(jda);
+        tickables.addAll(Arrays.asList(new StealABrainrot(jda), new IMDBRemind(jda), geoguessGame = new GeoguessGame(jda)));
 
         commandHandler.registerCommand(new ClearMemoryCommand());
         commandHandler.registerCommand(new HistoryCommand());
@@ -73,12 +62,13 @@ public class LocalBot {
         commandHandler.registerCommand(new SetPrefixCommand());
         commandHandler.registerCommand(new StealBrainrotCommand());
         commandHandler.registerCommand(new IMDBRemindCommand());
+        commandHandler.registerCommand(new UptimeCommand());
         commandHandler.registerCommand(new AutoTranslateCommand());
+        commandHandler.registerCommand(new GeoguessCommand());
 
         this.ollamaAPI = new OllamaAPI("http://bs.byenoob.com:32771");
         ollamaAPI.setRequestTimeoutSeconds(30);
 
-        // Steal a brainrot notifier
         new Thread(() -> {
             while(true) {
                 try {
@@ -87,8 +77,9 @@ public class LocalBot {
                         continue;
                     }
 
-                    stealABrainrot.tick();
-                    imdbRemind.tick();
+                    for (Tickable tickable : tickables) {
+                        tickable.tick();
+                    }
                     Thread.sleep(1L);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
@@ -98,6 +89,8 @@ public class LocalBot {
 
         try {
             this.jda.awaitReady();
+
+            tickables.forEach(Tickable::onStartup);
         } catch (InterruptedException e) {
             e.printStackTrace();
         }

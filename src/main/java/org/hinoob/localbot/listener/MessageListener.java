@@ -9,12 +9,15 @@ import io.github.ollama4j.models.chat.OllamaChatMessage;
 import io.github.ollama4j.models.chat.OllamaChatMessageRole;
 import io.github.ollama4j.models.chat.OllamaChatRequest;
 import net.dv8tion.jda.api.EmbedBuilder;
+import net.dv8tion.jda.api.entities.Message;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.hooks.ListenerAdapter;
 import net.dv8tion.jda.api.hooks.SubscribeEvent;
 import org.hinoob.localbot.ChatbotData;
 import org.hinoob.localbot.LocalBot;
+import org.hinoob.localbot.datastore.GuildDatastore;
 import org.hinoob.localbot.datastore.UserDatastore;
+import org.hinoob.localbot.util.GeoguessPicture;
 import org.hinoob.localbot.util.TranslateAPI;
 
 import java.awt.*;
@@ -26,10 +29,14 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class MessageListener extends ListenerAdapter {
+
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     @SubscribeEvent
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -39,7 +46,10 @@ public class MessageListener extends ListenerAdapter {
         String messageContent = event.getMessage().getContentRaw();
         String prefix = LocalBot.getInstance().getDatastoreHandler().getUserDatastore(userId).getString("prefix")
                 .orElse(",");
+
         UserDatastore userDatastore = LocalBot.getInstance().getDatastoreHandler().getUserDatastore(userId);
+        GuildDatastore guildDatastore = LocalBot.getInstance().getDatastoreHandler().getGuildDatastore(event.getGuild().getId());
+
         if (messageContent.startsWith(prefix)) {
             LocalBot.getInstance().getCommandHandler().handleMessage(event);
         } else if(event.getMessage().getMentions().isMentioned(LocalBot.getInstance().getJda().getSelfUser())) {
@@ -61,6 +71,28 @@ public class MessageListener extends ListenerAdapter {
                 fetchExternalInfoAndRespond(event, messageContent, history);
             } else {
                 addUserMessageAndRespond(event, messageContent, history);
+            }
+        } else if(guildDatastore.contains("geoguess_channel") && event.getMessage().getChannelId().equals(guildDatastore.getString("geoguess_channel").orElse(""))) {
+            // Handle GeoGuessr channel messages
+
+            GeoguessPicture pic = LocalBot.getInstance().getGeoguessGame().getPictureForGuild(event.getGuild().getId());
+            if(pic != null) {
+                if (messageContent.equalsIgnoreCase(pic.getCountry())) {
+                    event.getChannel().sendMessage("🎉 Correct! The location was: " + pic.getCountry()).queue(msg -> {
+                        msg.delete().queueAfter(3, TimeUnit.SECONDS, null, err -> {});
+                        event.getMessage().delete().queue(null, err -> {});
+
+                        scheduler.schedule(() -> {
+                            LocalBot.getInstance().getGeoguessGame().resetPicture(event.getGuild().getId(), event.getChannel().getId());
+                        }, 4, TimeUnit.SECONDS);
+                    });
+
+                } else {
+                    event.getChannel().sendMessage("❌ Incorrect! Try again.").queue(msg -> {
+                        msg.delete().queueAfter(3, TimeUnit.SECONDS);
+                        event.getMessage().delete().queue();
+                    });
+                }
             }
         } else {
             if(!userDatastore.contains("auto_translate") || userDatastore.get("auto_translate").orElse(new JsonPrimitive(false)).getAsBoolean()) {

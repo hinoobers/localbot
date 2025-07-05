@@ -2,8 +2,8 @@ package org.hinoob.localbot.command.impl;
 
 import net.dv8tion.jda.api.Permission;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.command.Command;
+import org.hinoob.localbot.datastore.UserDatastore;
 
 public class SetPrefixCommand extends Command {
 
@@ -12,7 +12,7 @@ public class SetPrefixCommand extends Command {
     }
 
     @Override
-    public void handle(MessageReceivedEvent event, String[] args) {
+    public void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore) {
         if (args.length < 2) {
             event.getChannel().sendMessage("Usage: !setprefix <new_prefix>").queue();
             return;
@@ -29,7 +29,7 @@ public class SetPrefixCommand extends Command {
             return;
         }
 
-        LocalBot.getInstance().getDatastoreHandler().getUserDatastore(event.getMember().getId()).setString("prefix", newPrefix);
+        userDatastore.setString("prefix", newPrefix);
         event.getChannel().sendMessage("Prefix set to: " + newPrefix).queue();
     }
 }

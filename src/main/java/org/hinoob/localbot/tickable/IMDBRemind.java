@@ -29,6 +29,11 @@ public class IMDBRemind extends Tickable{
     }
 
     @Override
+    public void onStartup() {
+
+    }
+
+    @Override
     protected void onTick() {
         for(Map.Entry<String, UserDatastore> key : LocalBot.getInstance().getDatastoreHandler().getAllUserDatastores()) {
             UserDatastore datastore = key.getValue();

@@ -3,8 +3,8 @@ package org.hinoob.localbot.command.impl;
 import io.github.ollama4j.models.chat.OllamaChatMessage;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import org.hinoob.localbot.ChatbotData;
-import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.command.Command;
+import org.hinoob.localbot.datastore.UserDatastore;
 
 import java.util.List;
 
@@ -15,7 +15,7 @@ public class HistoryCommand extends Command {
     }
 
     @Override
-    public void handle(MessageReceivedEvent event, String[] args) {
+    public void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore) {
         List<OllamaChatMessage> history = ChatbotData.chatHistory.get(event.getAuthor().getId());
         if (history == null || history.isEmpty()) {
             event.getChannel().sendMessage("❗ No chat history found.").queue();

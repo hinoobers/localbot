@@ -20,9 +20,12 @@ public abstract class Tickable {
         onTick();
     }
 
+
     protected void waitSeconds(int seconds) {
         this.waitTicks += seconds * 20;
     }
 
     protected abstract void onTick();
+
+    public abstract void onStartup();
 }

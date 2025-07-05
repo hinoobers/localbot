@@ -3,17 +3,13 @@ package org.hinoob.localbot.command.impl;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
-import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.command.Command;
 import org.hinoob.localbot.datastore.UserDatastore;
 import org.hinoob.localbot.util.DateParser;
-import org.hinoob.localbot.util.FileUtil;
 import org.hinoob.localbot.util.JSONResponse;
 import org.hinoob.localbot.util.OmdbAPI;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.Locale;
 
 public class IMDBRemindCommand extends Command {
     public IMDBRemindCommand() {
@@ -21,8 +17,7 @@ public class IMDBRemindCommand extends Command {
     }
 
     @Override
-    public void handle(MessageReceivedEvent event, String[] args) {
-        UserDatastore userDatastore = LocalBot.getInstance().getDatastoreHandler().getUserDatastore(event.getAuthor().getId());
+    public void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore) {
         JsonArray reminders = userDatastore.get("imdb_reminders").orElse(new JsonArray()).getAsJsonArray();
 
         if(args.length == 2) {

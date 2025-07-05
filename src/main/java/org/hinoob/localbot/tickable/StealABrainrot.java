@@ -28,6 +28,11 @@ public class StealABrainrot extends Tickable {
     }
 
     @Override
+    public void onStartup() {
+
+    }
+
+    @Override
     public void onTick() {
         try {
             JSONResponse obj = FileUtil.read("https://games.roblox.com/v1/games/votes?universeIds=7709344486");
