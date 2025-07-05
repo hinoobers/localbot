@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+    id 'application'
+    id("com.gradleup.shadow") version "9.0.0-beta17"
+}
+
+group = 'org.example'
+version = '1.0-SNAPSHOT'
+
+application {
+    mainClass = 'Start'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'io.github.ollama4j:ollama4j:1.0.100'
+    compileOnly("org.projectlombok:lombok:1.18.38")
+    annotationProcessor("org.projectlombok:lombok:1.18.38")
+    implementation("net.dv8tion:JDA:5.6.1")
+    implementation("com.google.code.gson:gson:2.13.1")
+}
+
+test {
+    useJUnitPlatform()
+}
