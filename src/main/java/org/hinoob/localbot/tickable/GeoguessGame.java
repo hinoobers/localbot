@@ -2,19 +2,16 @@ package org.hinoob.localbot.tickable;
 
 import com.google.gson.JsonElement;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Message;
-import net.dv8tion.jda.api.entities.channel.Channel;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
-import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
 import net.dv8tion.jda.api.utils.FileUpload;
 import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.datastore.GuildDatastore;
 import org.hinoob.localbot.util.GeoguessPicture;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 public class GeoguessGame extends Tickable{
@@ -53,11 +50,35 @@ public class GeoguessGame extends Tickable{
                 continue;
             }
 
-            if(!geoguessPictures.containsKey(datastore.getKey())) {
-                geoguessPictures.put(datastore.getKey(), GeoguessPicture.getRandom());
+            boolean changeCondition = !geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange();
+            if(changeCondition) {
+                channel.getHistory().retrievePast(5).queue(messages -> {
+                    AtomicInteger count = new AtomicInteger();
 
-                channel.sendFiles(FileUpload.fromData(geoguessPictures.get(datastore.getKey()).getFile())).queue();
-                channel.sendMessage("Guess the location!").queue();
+                    Runnable run = () -> {
+                        if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange()) {
+                            GeoguessPicture picture = geoguessPictures.getOrDefault(datastore.getKey(), GeoguessPicture.getRandom(null));
+                            geoguessPictures.put(datastore.getKey(), picture);
+
+                            picture.setNeedsChange(false);
+
+                            channel.sendFiles(FileUpload.fromData(picture.getFile())).queue(_ -> channel.sendMessage("`Guess the country!`").queue());
+                        }
+                    };
+
+                    if(messages.isEmpty()) {
+                        run.run();
+                    } else if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange()){
+                        messages.forEach(m -> m.delete().queue(unused -> {
+                            count.incrementAndGet();
+                            if(count.get() == messages.size()) {
+                                run.run();
+                            }
+                        }, e -> {
+                        }));
+                    }
+
+                });
             }
         }
     }
@@ -66,9 +87,7 @@ public class GeoguessGame extends Tickable{
         TextChannel channel = jda.getGuildById(guild).getTextChannelById(channelId);
         if (channel == null) return;
 
-        channel.getHistory().retrievePast(5).queue(messages -> messages.forEach(message -> message.delete().queue(null, e -> {})));
-
-        geoguessPictures.remove(guild);
+        geoguessPictures.get(guild).reset();
     }
 
     public GeoguessPicture getPictureForGuild(String guildId) {

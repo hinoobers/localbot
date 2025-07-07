@@ -78,18 +78,18 @@ public class MessageListener extends ListenerAdapter {
             GeoguessPicture pic = LocalBot.getInstance().getGeoguessGame().getPictureForGuild(event.getGuild().getId());
             if(pic != null) {
                 if (messageContent.equalsIgnoreCase(pic.getCountry())) {
-                    event.getChannel().sendMessage("🎉 Correct! The location was: " + pic.getCountry()).queue(msg -> {
-                        msg.delete().queueAfter(3, TimeUnit.SECONDS, null, err -> {});
-                        event.getMessage().delete().queue(null, err -> {});
+                    event.getChannel().sendMessage("🎉 Correct! The country was: " + pic.getCountry()).queue(msg -> {
+                        msg.delete().queueAfter(2, TimeUnit.SECONDS, null, _ -> {});
+                        event.getMessage().delete().queue(null, _ -> {});
 
                         scheduler.schedule(() -> {
                             LocalBot.getInstance().getGeoguessGame().resetPicture(event.getGuild().getId(), event.getChannel().getId());
-                        }, 4, TimeUnit.SECONDS);
+                        }, 3, TimeUnit.SECONDS);
                     });
 
                 } else {
                     event.getChannel().sendMessage("❌ Incorrect! Try again.").queue(msg -> {
-                        msg.delete().queueAfter(3, TimeUnit.SECONDS);
+                        msg.delete().queueAfter(2, TimeUnit.SECONDS);
                         event.getMessage().delete().queue();
                     });
                 }

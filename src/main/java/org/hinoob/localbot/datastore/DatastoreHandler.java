@@ -15,14 +15,22 @@ public class DatastoreHandler {
     public DatastoreHandler() {
         globalDatastore.load();
 
-        for(File f : new File("users").listFiles()) {
+        File usersDir = new File("users");
+        if (!usersDir.exists()) {
+            usersDir.mkdirs();
+        }
+        for(File f : usersDir.listFiles()) {
             if(f.isFile() && f.getName().endsWith(".json")) {
                 String userId = f.getName().replace(".json", "");
                 userDatastores.put(userId, new UserDatastore(userId));
             }
         }
 
-        for(File f : new File("guilds").listFiles()) {
+        File guildsDir = new File("guilds");
+        if (!guildsDir.exists()) {
+            guildsDir.mkdirs();
+        }
+        for(File f : guildsDir.listFiles()) {
             if(f.isFile() && f.getName().endsWith(".json")) {
                 String guildId = f.getName().replace(".json", "");
                 guildDatastores.put(guildId, new GuildDatastore(guildId));
