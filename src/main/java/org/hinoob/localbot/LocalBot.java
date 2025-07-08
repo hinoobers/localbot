@@ -17,6 +17,9 @@ import org.hinoob.localbot.tickable.Tickable;
 import org.hinoob.localbot.util.FileUtil;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +47,16 @@ public class LocalBot {
             logger.severe("secret.json file not found! Please create a file named 'secret.json' with your bot token.");
             return;
         }
+
+        Thread.setDefaultUncaughtExceptionHandler((_, throwable) -> {
+            try (PrintWriter out = new PrintWriter(new FileWriter("crash.log", true))) {
+                out.println("==== CRASH @ " + java.time.LocalDateTime.now() + " ====");
+                throwable.printStackTrace(out);
+                out.println("====================================");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
 
         this.jda = JDABuilder.createDefault(FileUtil.readFileJson("secret.json").get("bot_token").getAsString())
                 .enableIntents(GatewayIntent.MESSAGE_CONTENT,

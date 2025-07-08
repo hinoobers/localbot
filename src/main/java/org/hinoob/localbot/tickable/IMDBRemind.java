@@ -4,24 +4,18 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.JDA;
-import net.dv8tion.jda.api.entities.Member;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
-import net.dv8tion.jda.api.entities.channel.concrete.PrivateChannel;
 import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.datastore.UserDatastore;
 import org.hinoob.localbot.util.DateParser;
-import org.hinoob.localbot.util.FileUtil;
 import org.hinoob.localbot.util.JSONResponse;
 import org.hinoob.localbot.util.OmdbAPI;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
-import java.util.function.Consumer;
 
 public class IMDBRemind extends Tickable{
     public IMDBRemind(JDA jda) {
@@ -54,7 +48,7 @@ public class IMDBRemind extends Tickable{
                     int targetSeason = reminderObj.get("target_season").getAsInt();
 
                     JSONResponse data = OmdbAPI.get(imdbId, targetSeason);
-                    if(data.isRateLimited() || !data.get("Response").getAsBoolean()) {
+                    if(!data.isSuccessful() || !data.get("Response").getAsBoolean()) {
                         continue;
                     }
                     JsonArray episodes = data.getAsJsonArray("Episodes");
@@ -82,7 +76,7 @@ public class IMDBRemind extends Tickable{
                     });
                 } else {
                     JSONResponse data = OmdbAPI.get(imdbId, null);
-                    if(data.isRateLimited() || !data.get("Response").getAsBoolean() || !data.has("Released") || data.get("Released").getAsString().equals("N/A")) {
+                    if(!data.isSuccessful() || !data.get("Response").getAsBoolean() || !data.has("Released") || data.get("Released").getAsString().equals("N/A")) {
                         continue; // No release date available
                     }
 

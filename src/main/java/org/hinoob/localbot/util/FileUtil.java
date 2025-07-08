@@ -40,12 +40,8 @@ public class FileUtil {
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Accept", "application/json");
 
-            if (connection.getResponseCode() == 429) {
-                return new JSONResponse(true);
-            }
-
             if (connection.getResponseCode() != 200) {
-                throw new RuntimeException("Failed : HTTP error code : " + connection.getResponseCode());
+                return new JSONResponse(false);
             }
 
             java.io.BufferedReader br = new java.io.BufferedReader(new java.io.InputStreamReader(connection.getInputStream()));

@@ -33,6 +33,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 public class MessageListener extends ListenerAdapter {
 
@@ -74,7 +75,13 @@ public class MessageListener extends ListenerAdapter {
             }
         } else if(guildDatastore.contains("geoguess_channel") && event.getMessage().getChannelId().equals(guildDatastore.getString("geoguess_channel").orElse(""))) {
             // Handle GeoGuessr channel messages
-
+            if(messageContent.isBlank() || messageContent.length() > 56 || messageContent.chars().boxed().collect(Collectors.toSet()).size() == 1) {
+                event.getChannel().sendMessage("❗ Invalid guess! Please enter a valid country name.").queue(msg -> {
+                    msg.delete().queueAfter(2, TimeUnit.SECONDS);
+                    event.getMessage().delete().queue();
+                });
+                return;
+            }
             GeoguessPicture pic = LocalBot.getInstance().getGeoguessGame().getPictureForGuild(event.getGuild().getId());
             if(pic != null) {
                 if (messageContent.equalsIgnoreCase(pic.getCountry())) {

@@ -4,7 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
-import java.io.File;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 public class GlobalDatastore implements Datastorage{
@@ -23,9 +24,8 @@ public class GlobalDatastore implements Datastorage{
             }
         }
 
-        Gson gson = new Gson();
-        try {
-            data = gson.fromJson(new java.io.FileReader(file), JsonObject.class);
+        try (FileReader reader = new FileReader(file)) {
+            data = GSON.fromJson(reader, JsonObject.class);
             if (data == null) {
                 data = new JsonObject();
             }
@@ -47,23 +47,13 @@ public class GlobalDatastore implements Datastorage{
     @Override
     public void set(String key, JsonElement value) {
         data.add(key, value);
-        Gson gson = new Gson();
-        try (java.io.FileWriter writer = new java.io.FileWriter(file)) {
-            gson.toJson(data, writer);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        save();
     }
 
     @Override
     public void setString(String key, String value) {
         data.addProperty(key, value);
-        Gson gson = new Gson();
-        try (java.io.FileWriter writer = new java.io.FileWriter(file)) {
-            gson.toJson(data, writer);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        save();
     }
 
     @Override
@@ -80,17 +70,25 @@ public class GlobalDatastore implements Datastorage{
     public void delete(String key) {
         if (data.has(key)) {
             data.remove(key);
-            Gson gson = new Gson();
-            try (java.io.FileWriter writer = new java.io.FileWriter(file)) {
-                gson.toJson(data, writer);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            save();
         }
     }
 
     @Override
     public boolean contains(String key) {
         return data.has(key);
+    }
+
+    private void save() {
+        try (FileOutputStream fos = new FileOutputStream(file);
+            OutputStreamWriter osw = new OutputStreamWriter(fos, StandardCharsets.UTF_8);
+            BufferedWriter writer = new BufferedWriter(osw)) {
+
+            GSON.toJson(data, writer);
+            writer.flush();
+            fos.getFD().sync(); // Force flush to disk
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

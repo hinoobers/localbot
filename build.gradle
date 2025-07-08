@@ -21,6 +21,11 @@ dependencies {
     annotationProcessor("org.projectlombok:lombok:1.18.38")
     implementation("net.dv8tion:JDA:5.6.1")
     implementation("com.google.code.gson:gson:2.13.1")
+    implementation(platform("ai.djl:bom:0.33.0"))
+    implementation("ai.djl:api:0.33.0")
+    implementation("ai.djl.huggingface:tokenizers:0.33.0")
+    implementation("ai.djl.pytorch:pytorch-model-zoo:0.33.0")
+    implementation("ai.djl.pytorch:pytorch-engine:0.33.0")
 }
 
 test {

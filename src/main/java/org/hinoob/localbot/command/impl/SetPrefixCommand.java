@@ -18,11 +18,6 @@ public class SetPrefixCommand extends Command {
             return;
         }
 
-        if(!event.getMember().hasPermission(Permission.MANAGE_SERVER)) {
-            event.getChannel().sendMessage("❗ You do not have permission to change the prefix.").queue();
-            return;
-        }
-
         String newPrefix = args[1];
         if(newPrefix.isBlank() || newPrefix.length() > 5) {
             event.getChannel().sendMessage("❗ Prefix must be between 1 and 5 characters.").queue();

@@ -2,8 +2,6 @@ package org.hinoob.localbot.util;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.concurrent.CompletableFuture;
-import java.util.function.Supplier;
 
 public class TranslateAPI {
 
@@ -19,7 +17,7 @@ public class TranslateAPI {
         // target
         String apiUrl = "https://api-free.deepl.com/v2/translate?auth_key="+API_KEY+"&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8) + "&target_lang=" + targetLanguage;
         JSONResponse response = FileUtil.read(apiUrl);
-        if(response.isRateLimited()) {
+        if(!response.isSuccessful()) {
             return null;
         }
 
@@ -48,7 +46,7 @@ public class TranslateAPI {
         // target
         String apiUrl = "https://api-free.deepl.com/v2/translate?auth_key="+API_KEY+"&text=" + URLEncoder.encode(text, StandardCharsets.UTF_8) + "&target_lang=en";
         JSONResponse response = FileUtil.read(apiUrl);
-        if(response.isRateLimited()) {
+        if(!response.isSuccessful()) {
             return null;
         }
 

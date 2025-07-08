@@ -38,7 +38,7 @@ public class IMDBRemindCommand extends Command {
             }
 
             JSONResponse o = OmdbAPI.get(imdbId, null);
-            if(o.isRateLimited()) {
+            if(!o.isSuccessful()) {
                 event.getChannel().sendMessage("❗ Rate limit exceeded. Please try again later.").queue();
                 return;
             }
@@ -92,7 +92,7 @@ public class IMDBRemindCommand extends Command {
             }
 
             JSONResponse o = OmdbAPI.get(imdbId, season);
-            if(o.isRateLimited()) {
+            if(!o.isSuccessful()) {
                 event.getChannel().sendMessage("❗ Rate limit exceeded. Please try again later.").queue();
                 return;
             }

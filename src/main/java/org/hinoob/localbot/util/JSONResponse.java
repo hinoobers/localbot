@@ -6,21 +6,21 @@ import com.google.gson.JsonObject;
 
 public final class JSONResponse {
 
-    private final boolean rateLimited;
+    private final boolean successful;
     private final JsonObject data;
 
     public JSONResponse(JsonObject o) {
-        this.rateLimited = false;
+        this.successful = true;
         this.data = o;
     }
 
-    public JSONResponse(boolean rateLimited) {
-        this.rateLimited = rateLimited;
+    public JSONResponse(boolean successful) {
+        this.successful = successful;
         this.data = new JsonObject();
     }
 
-    public boolean isRateLimited() {
-        return rateLimited;
+    public boolean isSuccessful() {
+        return successful;
     }
 
     public JsonElement get(String key) {

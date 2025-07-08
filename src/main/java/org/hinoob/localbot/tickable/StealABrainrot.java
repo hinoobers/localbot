@@ -1,7 +1,6 @@
 package org.hinoob.localbot.tickable;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Activity;
@@ -36,7 +35,7 @@ public class StealABrainrot extends Tickable {
     public void onTick() {
         try {
             JSONResponse obj = FileUtil.read("https://games.roblox.com/v1/games/votes?universeIds=7709344486");
-            if(!obj.isRateLimited()) {
+            if(obj.isSuccessful()) {
                 JsonArray data = obj.getAsJsonArray("data");
                 if(data == null || data.isEmpty()) {
                     waitSeconds(15);
@@ -46,63 +45,67 @@ public class StealABrainrot extends Tickable {
                 int likes = data.get(0).getAsJsonObject().get("upVotes").getAsInt();
                 int goal = getNextLikeGoal(likes);
 
+                List<MessageEmbed> sendingEmbeds = new ArrayList<>();
+
                 if(goal-likes <= 1000 && !notified) {
-                    List<Long> notifiedList = new ArrayList<>();
-
-                    for(Guild guild : jda.getGuilds()) {
-                        for(Member member : guild.getMembers()) {
-                            if(member.getUser().isBot()) continue;
-                            if(!LocalBot.getInstance().getDatastoreHandler().getUserDatastore(member.getId()).contains("steal_brainrot_notifier")) continue;
-                            if(notifiedList.contains(member.getIdLong())) continue;
-
-                            notifiedList.add(member.getIdLong());
-
-                            PrivateChannel channel = member.getUser().openPrivateChannel().complete();
-                            if(channel != null) {
-                                MessageEmbed embed = new EmbedBuilder()
-                                        .setTitle("Steal a brainrot close to goal!")
-                                        .addField("Goal", MessageUtil.beautifyCase(goal), true)
-                                        .addField("Current Likes", MessageUtil.beautify(likes), true)
-                                        .addField("To-go", MessageUtil.beautify(goal - likes), true)
-                                        .setColor(Color.GREEN)
-                                        .build();
-                                channel.sendMessageEmbeds(embed).queue();
-                            }
-                        }
-                    }
+                    MessageEmbed embed = new EmbedBuilder()
+                            .setTitle("Steal a brainrot close to goal!")
+                            .addField("Goal", MessageUtil.beautifyCase(goal), true)
+                            .addField("Current Likes", MessageUtil.beautify(likes), true)
+                            .addField("To-go", MessageUtil.beautify(goal - likes), true)
+                            .setColor(Color.GREEN)
+                            .build();
+                    sendingEmbeds.add(embed);
                     notified = true;
                 } else if(goal-likes <= 500 && !notifiedLowLikes && notified) {
-                    List<Long> notifiedList = new ArrayList<>();
-
-                    for(Guild guild : jda.getGuilds()) {
-                        for(Member member : guild.getMembers()) {
-                            if(member.getUser().isBot()) continue;
-                            if(!LocalBot.getInstance().getDatastoreHandler().getUserDatastore(member.getId()).contains("steal_brainrot_notifier")) continue;
-                            if(notifiedList.contains(member.getIdLong())) continue;
-
-                            notifiedList.add(member.getIdLong());
-
-                            PrivateChannel channel = member.getUser().openPrivateChannel().complete();
-                            if(channel != null) {
-                                MessageEmbed embed = new EmbedBuilder()
-                                        .setTitle("Steal a brainrot close to goal!")
-                                        .addField("Goal", MessageUtil.beautifyCase(goal), true)
-                                        .addField("Current Likes", MessageUtil.beautify(likes), true)
-                                        .addField("To-go", MessageUtil.beautify(goal - likes), true)
-                                        .setColor(Color.RED)
-                                        .build();
-                                channel.sendMessageEmbeds(embed).queue();
-                            }
-                        }
-                    }
+                    MessageEmbed embed = new EmbedBuilder()
+                            .setTitle("Steal a brainrot close to goal!")
+                            .addField("Goal", MessageUtil.beautifyCase(goal), true)
+                            .addField("Current Likes", MessageUtil.beautify(likes), true)
+                            .addField("To-go", MessageUtil.beautify(goal - likes), true)
+                            .setColor(Color.RED)
+                            .build();
+                    sendingEmbeds.add(embed);
                     notifiedLowLikes = true;
                 }
 
                 if(currentGoal == -1 || goal > currentGoal) {
+                    if(currentGoal != -1) {
+                        // Notify only when the goal changes, not initially
+                        List<Long> notifiedList = new ArrayList<>();
+                        for(Guild guild : jda.getGuilds()) {
+                            for(Member member : guild.getMembers()) {
+                                if (member.getUser().isBot()) continue;
+                                if (!LocalBot.getInstance().getDatastoreHandler().getUserDatastore(member.getId()).contains("steal_brainrot_notifier"))
+                                    continue;
+                                if (notifiedList.contains(member.getIdLong())) continue;
+                                notifiedList.add(member.getIdLong());
+
+                                PrivateChannel channel = member.getUser().openPrivateChannel().complete();
+                                if (channel != null) {
+                                    if(!sendingEmbeds.isEmpty()) {
+                                        // Ensure the goal messages are last, makes it more logical
+                                        channel.sendMessageEmbeds(sendingEmbeds).queue();
+                                    }
+                                    MessageEmbed embed = new EmbedBuilder()
+                                            .setTitle("Steal a brainrot NEW GOAL")
+                                            .addField("Goal", MessageUtil.beautifyCase(goal), true)
+                                            .addField("Current Likes", MessageUtil.beautify(likes), true)
+                                            .setColor(Color.PINK)
+                                            .build();
+                                    channel.sendMessageEmbeds(embed).queue();
+                                }
+                            }
+                        }
+                        notified = false;
+                        notifiedLowLikes = false;
+                    }
+
                     currentGoal = goal;
+                } else if(!sendingEmbeds.isEmpty()) {
                     List<Long> notifiedList = new ArrayList<>();
                     for(Guild guild : jda.getGuilds()) {
-                        for(Member member : guild.getMembers()) {
+                        for (Member member : guild.getMembers()) {
                             if (member.getUser().isBot()) continue;
                             if (!LocalBot.getInstance().getDatastoreHandler().getUserDatastore(member.getId()).contains("steal_brainrot_notifier"))
                                 continue;
@@ -111,18 +114,10 @@ public class StealABrainrot extends Tickable {
 
                             PrivateChannel channel = member.getUser().openPrivateChannel().complete();
                             if (channel != null) {
-                                MessageEmbed embed = new EmbedBuilder()
-                                        .setTitle("Steal a brainrot NEW GOAL")
-                                        .addField("Goal", MessageUtil.beautifyCase(goal), true)
-                                        .addField("Current Likes", MessageUtil.beautify(likes), true)
-                                        .setColor(Color.PINK)
-                                        .build();
-                                channel.sendMessageEmbeds(embed).queue();
+                                channel.sendMessageEmbeds(sendingEmbeds).queue();
                             }
                         }
                     }
-                    notified = false;
-                    notifiedLowLikes = false;
                 }
 
                 jda.getPresence().setActivity(Activity.of(Activity.ActivityType.PLAYING, "SaB " + MessageUtil.beautify(likes) + "/" + MessageUtil.beautifyCase(goal)));
