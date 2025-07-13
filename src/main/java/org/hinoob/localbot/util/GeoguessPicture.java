@@ -1,12 +1,16 @@
 package org.hinoob.localbot.util;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.io.File;
 
 public class GeoguessPicture {
 
     private File file;
     private String country;
-    private boolean needsChange = false;
+    @Getter @Setter
+    private boolean needsChange = false, switching = false;
 
     public GeoguessPicture(File file, String country) {
         this.file = file;
@@ -29,14 +33,7 @@ public class GeoguessPicture {
             this.country = newPicture.getCountry();
             this.needsChange = true;
         }
-    }
-
-    public boolean needsChange() {
-        return needsChange;
-    }
-
-    public void setNeedsChange(boolean needsChange) {
-        this.needsChange = needsChange;
+        this.switching = false;
     }
 
     public static GeoguessPicture getRandom(GeoguessPicture previous) {

@@ -9,7 +9,9 @@ import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.datastore.GuildDatastore;
 import org.hinoob.localbot.util.GeoguessPicture;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -19,6 +21,7 @@ public class GeoguessGame extends Tickable{
         super(jda);
     }
 
+    private final Map<String, GuildData> guildDataHashMap = new HashMap<>();
     private final Map<String, GeoguessPicture> geoguessPictures = new HashMap<>();
 
     @Override
@@ -43,42 +46,48 @@ public class GeoguessGame extends Tickable{
             JsonElement channelId = datastore.getValue().get("geoguess_channel").orElse(null);
             if(channelId == null) continue;
 
+
             TextChannel channel = jda.getGuildById(datastore.getKey()).getTextChannelById(channelId.getAsString());
-            try {
-                long a = channel.getLatestMessageIdLong() - 4;
-            } catch(Exception ignored) {
-                continue;
-            }
 
-            boolean changeCondition = !geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange();
+            GuildData guildDatastore = guildDataHashMap.computeIfAbsent(datastore.getKey(), k -> new GuildData());
+            if(guildDatastore.updating) continue;
+
+            boolean changeCondition = !geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).isNeedsChange();
             if(changeCondition) {
-                channel.getHistory().retrievePast(5).queue(messages -> {
-                    AtomicInteger count = new AtomicInteger();
 
-                    Runnable run = () -> {
-                        if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange()) {
-                            GeoguessPicture picture = geoguessPictures.getOrDefault(datastore.getKey(), GeoguessPicture.getRandom(null));
-                            geoguessPictures.put(datastore.getKey(), picture);
+                Runnable run = () -> {
+                    if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).isNeedsChange()) {
+                        GeoguessPicture picture = geoguessPictures.getOrDefault(datastore.getKey(), GeoguessPicture.getRandom(null));
+                        geoguessPictures.put(datastore.getKey(), picture);
 
-                            picture.setNeedsChange(false);
+                        picture.setNeedsChange(false);
 
-                            channel.sendFiles(FileUpload.fromData(picture.getFile())).queue(_ -> channel.sendMessage("`Guess the country!`").queue());
-                        }
-                    };
-
-                    if(messages.isEmpty()) {
-                        run.run();
-                    } else if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).needsChange()){
-                        messages.forEach(m -> m.delete().queue(unused -> {
-                            count.incrementAndGet();
-                            if(count.get() == messages.size()) {
-                                run.run();
-                            }
-                        }, e -> {
-                        }));
+                        channel.sendFiles(FileUpload.fromData(picture.getFile())).queue(firstMsg -> {
+                            guildDatastore.messageIds.add(firstMsg.getId());
+                            channel.sendMessage("`Guess the country!`").queue(secondMsg -> {
+                                guildDatastore.messageIds.add(secondMsg.getId());
+                                guildDatastore.updating = false;
+                            });
+                        });
                     }
+                };
 
-                });
+                if(guildDatastore.messageIds.isEmpty()) {
+                    run.run();
+                } else if(!geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).isNeedsChange()){
+                    guildDatastore.updating = true;
+                    if(guildDatastore.messageIds.size() == 1) {
+                        channel.deleteMessageById(guildDatastore.messageIds.getFirst()).queue(_ -> {
+                            run.run();
+                        }, e -> {});
+                    } else {
+                        channel.deleteMessagesByIds(guildDatastore.messageIds).queue(_ -> {
+                            // I don't know if this callback runs for every message dfeleted or once they're all deleted
+                            run.run();
+                        }, e -> {
+                        });
+                    }
+                }
             }
         }
     }
@@ -92,5 +101,15 @@ public class GeoguessGame extends Tickable{
 
     public GeoguessPicture getPictureForGuild(String guildId) {
         return geoguessPictures.get(guildId);
+    }
+
+    public class GuildData {
+        private boolean updating;
+        private List<String> messageIds;
+
+        public GuildData() {
+            this.updating = false;
+            this.messageIds = new ArrayList<>();
+        }
     }
 }

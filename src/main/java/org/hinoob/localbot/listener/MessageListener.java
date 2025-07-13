@@ -37,7 +37,6 @@ import java.util.stream.Collectors;
 
 public class MessageListener extends ListenerAdapter {
 
-    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
 
     @SubscribeEvent
     public void onMessageReceived(MessageReceivedEvent event) {
@@ -82,24 +81,29 @@ public class MessageListener extends ListenerAdapter {
                 });
                 return;
             }
+
             GeoguessPicture pic = LocalBot.getInstance().getGeoguessGame().getPictureForGuild(event.getGuild().getId());
-            if(pic != null) {
-                if (messageContent.equalsIgnoreCase(pic.getCountry())) {
-                    event.getChannel().sendMessage("🎉 Correct! The country was: " + pic.getCountry()).queue(msg -> {
-                        msg.delete().queueAfter(2, TimeUnit.SECONDS, null, _ -> {});
-                        event.getMessage().delete().queue(null, _ -> {});
+            if(pic == null || pic.isSwitching()) {
+                event.getMessage().delete().queue();
+                return;
+            }
 
-                        scheduler.schedule(() -> {
-                            LocalBot.getInstance().getGeoguessGame().resetPicture(event.getGuild().getId(), event.getChannel().getId());
-                        }, 3, TimeUnit.SECONDS);
-                    });
+            if (messageContent.equalsIgnoreCase(pic.getCountry())) {
+                pic.setSwitching(true);
+                event.getChannel().sendMessage("🎉 Correct! The country was: " + pic.getCountry()).queue(msg -> {
+                    msg.delete().queueAfter(2, TimeUnit.SECONDS, null, _ -> {});
+                    event.getMessage().delete().queue(null, _ -> {});
 
-                } else {
-                    event.getChannel().sendMessage("❌ Incorrect! Try again.").queue(msg -> {
-                        msg.delete().queueAfter(2, TimeUnit.SECONDS);
-                        event.getMessage().delete().queue();
-                    });
-                }
+                    LocalBot.getInstance().getScheduler().schedule(() -> {
+                        LocalBot.getInstance().getGeoguessGame().resetPicture(event.getGuild().getId(), event.getChannel().getId());
+                    }, 3, TimeUnit.SECONDS);
+                });
+
+            } else {
+                event.getChannel().sendMessage("❌ Incorrect! Try again.").queue(msg -> {
+                    msg.delete().queueAfter(2, TimeUnit.SECONDS);
+                    event.getMessage().delete().queue(null, _ -> {});
+                });
             }
         } else {
             if(!userDatastore.contains("auto_translate") || userDatastore.get("auto_translate").orElse(new JsonPrimitive(false)).getAsBoolean()) {

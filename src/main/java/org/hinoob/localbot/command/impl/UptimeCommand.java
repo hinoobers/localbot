@@ -9,7 +9,7 @@ public class UptimeCommand extends Command {
         super("uptime");
     }
 
-    private final long startup = System.currentTimeMillis();
+    public static final long startup = System.currentTimeMillis();
 
     @Override
     public void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore) {
