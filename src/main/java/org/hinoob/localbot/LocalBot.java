@@ -45,7 +45,7 @@ public class LocalBot {
 
     private GeoguessGame geoguessGame;
     private ActivityTracker activityTracker;
-    private LightningTracker lightningTracker;
+    //private LightningTracker lightningTracker;
     private StealABrainrot stealABrainrot;
 
     public void start() {
@@ -69,7 +69,7 @@ public class LocalBot {
                 .addEventListeners(new MessageListener())
                 .build();
 
-        tickables.addAll(Arrays.asList(stealABrainrot = new StealABrainrot(jda), new IMDBRemind(jda), geoguessGame = new GeoguessGame(jda), activityTracker = new ActivityTracker(jda), lightningTracker = new LightningTracker(jda)));
+        tickables.addAll(Arrays.asList(stealABrainrot = new StealABrainrot(jda), new IMDBRemind(jda), geoguessGame = new GeoguessGame(jda), activityTracker = new ActivityTracker(jda)));
 
         commandHandler.registerCommand(new ClearMemoryCommand());
         commandHandler.registerCommand(new HistoryCommand());
