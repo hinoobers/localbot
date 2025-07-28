@@ -82,8 +82,8 @@ public class LocalBot {
         commandHandler.registerCommand(new GeoguessCommand());
         commandHandler.registerCommand(new HelpCommand());
 
-        this.ollamaAPI = new OllamaAPI("http://bs.byenoob.com:32771");
-        ollamaAPI.setRequestTimeoutSeconds(30);
+        this.ollamaAPI = new OllamaAPI("http://bs.byenoob.com:32772");
+        ollamaAPI.setRequestTimeoutSeconds(45);
 
         scheduler.scheduleAtFixedRate(() -> {
             if (jda.getStatus() != JDA.Status.CONNECTED) {

@@ -12,7 +12,6 @@ import org.hinoob.localbot.LocalBot;
 import org.hinoob.localbot.datastore.GuildDatastore;
 import org.hinoob.localbot.util.FileUtil;
 import org.hinoob.localbot.util.JSONResponse;
-import org.hinoob.localbot.util.LightningMapsClient;
 
 import java.net.URI;
 import java.util.Map;
@@ -60,15 +59,15 @@ public class LightningTracker extends Tickable{
             int attempt = 0;
             while (attempt < maxRetries) {
                 try {
-                    container.connectToServer(
-                            new LightningMapsClient(
-                                    (float)57.59834501933561,
-                                    (float)59.63967994527055,
-                                    (float)21.613372799260702,
-                                    (float)28.11219592864192,
-                                    8),
-                            URI.create("wss://live.lightningmaps.org/")
-                    );
+//                    container.connectToServer(
+//                            new LightningMapsClient(
+//                                    (float)57.59834501933561,
+//                                    (float)59.63967994527055,
+//                                    (float)21.613372799260702,
+//                                    (float)28.11219592864192,
+//                                    8),
+//                            URI.create("wss://live.lightningmaps.org/")
+//                    );
                     System.out.println("Connected successfully");
                     break;  // exit loop on success
                 } catch (Exception e) {

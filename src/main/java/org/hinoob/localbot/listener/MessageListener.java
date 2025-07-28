@@ -260,7 +260,7 @@ public class MessageListener extends ListenerAdapter {
                     if (streamMsg.getMessage() == null) return;
 
                     String content = streamMsg.getMessage().getContent();
-                    if (content == null || content.isBlank()) return;
+                    if (content.isBlank()) return;
 
                     fullResponse.append(content);
 
@@ -275,6 +275,11 @@ public class MessageListener extends ListenerAdapter {
                 if (fullResponse.isEmpty()) {
                     message.editMessage("❗ No response generated from the model.").queue();
                 } else {
+                    String checkText = truncateWithRedact(fullResponse.toString()).trim().toLowerCase();
+                    if(checkText.contains("nigger") || checkText.contains("retard")) {
+                        message.editMessage("❗ The response contained inappropriate content and has been redacted.").queue();
+                        return;
+                    }
                     message.editMessage(truncateWithRedact(fullResponse.toString())).queue();
                     // Add assistant reply to history
 
