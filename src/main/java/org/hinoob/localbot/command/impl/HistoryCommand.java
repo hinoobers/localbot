@@ -27,4 +27,9 @@ public class HistoryCommand extends Command {
         }
         event.getChannel().sendMessage(historyMessage.toString()).queue();
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

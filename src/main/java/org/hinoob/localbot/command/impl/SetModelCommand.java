@@ -28,4 +28,9 @@ public class SetModelCommand extends Command {
             event.getChannel().sendMessage("Available models: " + String.join(", ", ChatbotData.VALID_MODELS)).queue();
         }
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

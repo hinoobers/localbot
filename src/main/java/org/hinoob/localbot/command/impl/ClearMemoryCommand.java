@@ -16,4 +16,9 @@ public class ClearMemoryCommand extends Command {
         ChatbotData.chatHistory.remove(event.getAuthor().getId());
         event.getChannel().sendMessage("🧠 Memory cleared!").queue();
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

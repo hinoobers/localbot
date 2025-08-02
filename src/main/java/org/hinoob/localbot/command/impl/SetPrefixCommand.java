@@ -27,4 +27,9 @@ public class SetPrefixCommand extends Command {
         userDatastore.setString("prefix", newPrefix);
         event.getChannel().sendMessage("Prefix set to: " + newPrefix).queue();
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

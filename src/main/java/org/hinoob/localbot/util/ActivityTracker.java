@@ -34,8 +34,16 @@ public class ActivityTracker extends Tickable {
             public Activity update() {
                 long uptimeMillis = System.currentTimeMillis() - UptimeCommand.startup;
                 int seconds = (int) (uptimeMillis / 1000);
+                int minutes = seconds / 60;
 
-                String uptimeMessage = "Uptime: " + (seconds > 1000 ? (seconds/60) + "m" : seconds + "s");
+                String uptimeMessage;
+                if(minutes > 1000) {
+                    uptimeMessage = "Uptime: " + (minutes / 60) + " hours";
+                } else if(seconds > 1000) {
+                    uptimeMessage = "Uptime: " + minutes + " minutes";
+                } else {
+                    uptimeMessage = "Uptime: " + seconds + " seconds";
+                }
 
                 return Activity.of(Activity.ActivityType.PLAYING, uptimeMessage);
             }

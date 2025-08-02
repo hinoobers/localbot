@@ -133,8 +133,16 @@ public class IMDBRemindCommand extends Command {
                     }
                 }
             }
+        } else {
+            event.getChannel().sendMessage("❗ Invalid provide IMDB id and optionally a season if it's a show for me to remind you.`").queue();
+            return;
         }
 
         userDatastore.set("imdb_reminders", reminders);
+    }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
     }
 }

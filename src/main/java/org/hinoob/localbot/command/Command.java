@@ -26,6 +26,8 @@ public abstract class Command {
         return aliases;
     }
 
+    public abstract boolean isAdminCommand();
+
     public abstract void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore);
 
 }

@@ -39,4 +39,9 @@ public class StealBrainrotCommand extends Command {
             }
         }
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

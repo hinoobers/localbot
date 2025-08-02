@@ -14,7 +14,12 @@ public class HelpCommand extends Command {
     public void handle(MessageReceivedEvent event, String[] args, UserDatastore userDatastore) {
         event.getChannel().sendMessage("Listing all commands:").queue();
         for(Command command : LocalBot.getInstance().getCommandHandler().getCommands()) {
-            event.getChannel().sendMessage("`" + LocalBot.getInstance().getDatastoreHandler().getUserDatastore(event.getAuthor().getId()).getString("prefix").orElse(",") + command.getName() + "`").queue();
+            event.getChannel().sendMessage("`" + LocalBot.getInstance().getDatastoreHandler().getUserDatastore(event.getAuthor().getId()).getString("prefix").orElse(",") + command.getName() + "`" + (command.isAdminCommand() ? " (admin command)":"")).queue();
         }
+    }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
     }
 }

@@ -22,4 +22,9 @@ public class UptimeCommand extends Command {
         String uptimeMessage = String.format("Uptime: %d days, %d hours, %d minutes, %d seconds", days, hours, minutes, seconds);
         event.getChannel().sendMessage(uptimeMessage).queue();
     }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
+    }
 }

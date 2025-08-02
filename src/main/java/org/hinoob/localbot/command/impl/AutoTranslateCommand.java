@@ -23,6 +23,15 @@ public class AutoTranslateCommand extends Command {
             } else {
                 event.getChannel().sendMessage("❗ Invalid argument. Use 'on' or 'off'.").queue();
             }
+        } else {
+            boolean isEnabled = userDatastore.get("auto_translate").orElse(new JsonPrimitive(true)).getAsBoolean();
+            String status = isEnabled ? "enabled" : "disabled";
+            event.getChannel().sendMessage("🔄 Auto-translation is currently " + status + ".").queue();
         }
+    }
+
+    @Override
+    public boolean isAdminCommand() {
+        return false;
     }
 }
