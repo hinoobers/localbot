@@ -52,7 +52,7 @@ public class GeoguessGame extends Tickable{
             GuildData guildDatastore = guildDataHashMap.computeIfAbsent(datastore.getKey(), k -> new GuildData());
             if(guildDatastore.updating) continue;
 
-            boolean changeCondition = !geoguessPictures.containsKey(datastore.getKey()) || geoguessPictures.get(datastore.getKey()).isNeedsChange();
+            boolean changeCondition = !geoguessPictures.containsKey(datastore.getKey()) || (geoguessPictures.containsKey(datastore.getKey()) && geoguessPictures.get(datastore.getKey()).isNeedsChange());
             if(changeCondition) {
 
                 Runnable run = () -> {
